@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        var canvas = document.getElementById('gameCanvas');
+        var ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth - 100;
+        canvas.height = window.innerHeight - 100;
+
+        var isJumping = false;
+        var jumpTimer = 0;
+
+        var cactusImg1 = new Image();
+        cactusImg1.src = 'cactus1.png';
+
+        var cactusImg2 = new Image();
+        cactusImg2.src = 'cactus2.png';
+
+        var dino = {
+            x: 10,
+            y: 200,
+            width: 100,
+            height: 100,
+            draw() {
+                ctx.fillStyle = 'green';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.drawImage(cactusImg1, this.x, this.y, this.width, this.height);
+            }
+        };
+
+        class Cactus {
+            constructor() {
+                this.x = 1500;
+                this.y = 200;
+                this.width = 100;
+                this.height = 100;
+            }
+            draw() {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.drawImage(cactusImg2, this.x, this.y, this.width, this.height);
+            }
+        }
+
+        var frameCounter = 0;
+        var cactusArray = [];
+        var animationFrame;
+
+        function gameLoop() {
+            animationFrame = requestAnimationFrame(gameLoop);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frameCounter++;
+
+            dino.draw();
+
+            if (frameCounter % 200 === 0) {
+                var cactus = new Cactus();
+                cactusArray.push(cactus);
+                cactus.draw();
+            }
+
+            cactusArray.forEach((cactus, index, array) => {
+                if (cactus.x < 0) {
+                    array.splice(index, 1);
+                }
+
+                cactus.draw();
+
+                let moveSpeed = Math.floor(Math.random() * 10) + 1;
+                cactus.x -= moveSpeed;
+
+                checkCollision(dino, cactus);
+            });
+
+            if (isJumping) {
+                dino.y--;
+                jumpTimer++;
+
+                if (dino.y <= 10 || jumpTimer === 100) {
+                    jumpTimer = 0;
+                    isJumping = false;
+                }
+            } else {
+                if (dino.y < 200) {
+                    dino.y++;
+                }
+            }
+        }
+
+        gameLoop();
+
+        document.addEventListener('keydown', function (e) {
+            if (e.code === "Space") {
+                if (!isJumping) {
+                    isJumping = true;
+                    jumpTimer = 0;
+                }
+            }
+        });
+
+        function checkCollision(dino, cactus) {
+            var dinoRight = dino.x + dino.width;
+            var dinoBottom = dino.y + dino.height;
+            var cactusRight = cactus.x + cactus.width;
+            var cactusBottom = cactus.y + cactus.height;
+
+            if (dinoRight > cactus.x &&
+                dino.x < cactusRight &&
+                dinoBottom > cactus.y &&
+                dino.y < cactusBottom) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                cancelAnimationFrame(animationFrame);
+                alert("Collision Detected!");
+            }
+        }
+    </script>
+
+</body>
+
+</html>
